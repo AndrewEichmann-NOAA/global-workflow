@@ -86,6 +86,7 @@ class MarineLETKF(Analysis):
         for ob in obs_list['observers']:
             obs_name = ob['obs space']['name'].lower()
             obs_filename = f"{self.task_config.RUN}.t{self.task_config.cyc}z.{obs_name}.{to_YMDH(self.task_config.current_cycle)}.nc4"
+            # obs_filename = f"{self.task_config.RUN}.t{self.task_config.cyc}z.{obs_name}.{to_YMDH(self.task_config.current_cycle)}.nc"
             obs_files.append((obs_filename, ob))
 
         obs_files_to_copy = []
@@ -135,6 +136,7 @@ class MarineLETKF(Analysis):
 
         logger.info("run")
 
+<<<<<<< HEAD
         exec_cmd_gridgen = Executable(self.task_config.APRUN_MARINEANALLETKF)
         exec_cmd_gridgen.add_default_arg(self.task_config.GRIDGEN_EXEC)
         exec_cmd_gridgen.add_default_arg(self.task_config.GRIDGEN_YAML)
@@ -162,6 +164,8 @@ class MarineLETKF(Analysis):
         pass
 
 
+=======
+>>>>>>> develop
     @logit(logger)
     def finalize(self):
         """Method finalize for ocean and sea ice LETKF task
