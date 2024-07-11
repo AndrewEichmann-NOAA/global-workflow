@@ -6,11 +6,13 @@ import os
 from pygfs.task.analysis import Analysis
 from typing import Dict
 from wxflow import (AttrDict,
+                    Executable,
                     FileHandler,
                     logit,
                     parse_j2yaml,
                     to_timedelta,
-                    to_YMDH)
+                    to_YMDH,
+                    WorkflowException)
 
 logger = getLogger(__name__.split('.')[-1])
 
@@ -64,6 +66,8 @@ class MarineLETKF(Analysis):
         logger.info("initialize")
 
         # make directories and stage ensemble background files
+        soca_fix_stage_list = parse_j2yaml(self.task_config.SOCA_FIX_STAGE_YAML_TMPL, self.task_config)
+        FileHandler(soca_fix_stage_list).sync()
         ensbkgconf = AttrDict()
         keys = ['previous_cycle', 'current_cycle', 'DATA', 'NMEM_ENS',
                 'PARMgfs', 'ROTDIR', 'COM_OCEAN_HISTORY_TMPL', 'COM_ICE_HISTORY_TMPL']
@@ -72,8 +76,6 @@ class MarineLETKF(Analysis):
         ensbkgconf.RUN = 'enkfgdas'
         soca_ens_bkg_stage_list = parse_j2yaml(self.task_config.SOCA_ENS_BKG_STAGE_YAML_TMPL, ensbkgconf)
         FileHandler(soca_ens_bkg_stage_list).sync()
-        soca_fix_stage_list = parse_j2yaml(self.task_config.SOCA_FIX_STAGE_YAML_TMPL, self.task_config)
-        FileHandler(soca_fix_stage_list).sync()
         letkf_stage_list = parse_j2yaml(self.task_config.MARINE_LETKF_STAGE_YAML_TMPL, self.task_config)
         FileHandler(letkf_stage_list).sync()
 
@@ -83,7 +85,7 @@ class MarineLETKF(Analysis):
         obs_files = []
         for ob in obs_list['observers']:
             obs_name = ob['obs space']['name'].lower()
-            obs_filename = f"{self.task_config.RUN}.t{self.task_config.cyc}z.{obs_name}.{to_YMDH(self.task_config.current_cycle)}.nc"
+            obs_filename = f"{self.task_config.RUN}.t{self.task_config.cyc}z.{obs_name}.{to_YMDH(self.task_config.current_cycle)}.nc4"
             obs_files.append((obs_filename, ob))
 
         obs_files_to_copy = []
@@ -132,6 +134,33 @@ class MarineLETKF(Analysis):
         """
 
         logger.info("run")
+
+        exec_cmd_gridgen = Executable(self.task_config.APRUN_MARINEANALLETKF)
+        exec_cmd_gridgen.add_default_arg(self.task_config.GRIDGEN_EXEC)
+        exec_cmd_gridgen.add_default_arg(self.task_config.GRIDGEN_YAML)
+
+        try:
+            logger.debug(f"Executing {exec_cmd_gridgen}")
+            exec_cmd_gridgen()
+        except OSError:
+            raise OSError(f"Failed to execute {exec_cmd_gridgen}")
+        except Exception:
+            raise WorkflowException(f"An error occured during execution of {exec_cmd_gridgen}")
+        pass
+
+        exec_cmd_letkf = Executable(self.task_config.APRUN_MARINEANALLETKF)
+        for letkf_exec_arg in self.task_config.letkf_exec_args:
+            exec_cmd_letkf.add_default_arg(letkf_exec_arg)
+
+        try:
+            logger.debug(f"Executing {exec_cmd_letkf}")
+            exec_cmd_letkf()
+        except OSError:
+            raise OSError(f"Failed to execute {exec_cmd_letkf}")
+        except Exception:
+            raise WorkflowException(f"An error occured during execution of {exec_cmd_letkf}")
+        pass
+
 
     @logit(logger)
     def finalize(self):
