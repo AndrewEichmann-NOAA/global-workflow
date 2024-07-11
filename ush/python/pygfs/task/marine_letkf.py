@@ -136,7 +136,6 @@ class MarineLETKF(Analysis):
 
         logger.info("run")
 
-<<<<<<< HEAD
         exec_cmd_gridgen = Executable(self.task_config.APRUN_MARINEANALLETKF)
         exec_cmd_gridgen.add_default_arg(self.task_config.GRIDGEN_EXEC)
         exec_cmd_gridgen.add_default_arg(self.task_config.GRIDGEN_YAML)
@@ -164,8 +163,6 @@ class MarineLETKF(Analysis):
         pass
 
 
-=======
->>>>>>> develop
     @logit(logger)
     def finalize(self):
         """Method finalize for ocean and sea ice LETKF task
