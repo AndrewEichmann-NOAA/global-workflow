@@ -15,4 +15,7 @@ export MARINE_LETKF_STAGE_YAML_TMPL="${PARMgfs}/gdas/soca/letkf/letkf_stage.yaml
 export GRIDGEN_EXEC="${JEDI_BIN}/gdas_soca_gridgen.x"
 export GRIDGEN_YAML="${PARMgfs}/gdas/soca/gridgen/gridgen.yaml"
 
+export KEEPDATA="YES"
+export OOPS_TRACE=0
+
 echo "END: config.marineanalletkf"

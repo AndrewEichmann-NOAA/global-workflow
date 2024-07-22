@@ -51,6 +51,7 @@ class MarineLETKF(Analysis):
         self.task_config.mom_input_nml_tmpl = os.path.join(self.task_config.DATA, 'mom_input.nml.tmpl')
         self.task_config.mom_input_nml = os.path.join(self.task_config.DATA, 'mom_input.nml')
         self.task_config.obs_dir = os.path.join(self.task_config.DATA, 'obs')
+        self.task_config.OPREFIX = f"{self.task_config.RUN}.t{self.task_config.cyc}z."
 
     @logit(logger)
     def initialize(self):
@@ -79,6 +80,7 @@ class MarineLETKF(Analysis):
         letkf_stage_list = parse_j2yaml(self.task_config.MARINE_LETKF_STAGE_YAML_TMPL, self.task_config)
         FileHandler(letkf_stage_list).sync()
 
+
         obs_list = parse_j2yaml(self.task_config.OBS_YAML, self.task_config)
 
         # get the list of observations
@@ -106,7 +108,7 @@ class MarineLETKF(Analysis):
 
         # make the letkf.yaml
         letkfconf = AttrDict()
-        keys = ['WINDOW_BEGIN', 'WINDOW_MIDDLE', 'RUN', 'gcyc', 'NMEM_ENS']
+        keys = ['WINDOW_BEGIN', 'WINDOW_MIDDLE', 'RUN', 'NMEM_ENS', 'OPREFIX', 'previous_cycle']
         for key in keys:
             letkfconf[key] = self.task_config[key]
         letkfconf.RUN = 'enkfgdas'
