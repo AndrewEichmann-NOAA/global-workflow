@@ -66,20 +66,36 @@ class MarineLETKF(Analysis):
 
         logger.info("initialize")
 
-        # make directories and stage ensemble background files
+        # stage fix files
         soca_fix_stage_list = parse_j2yaml(self.task_config.SOCA_FIX_STAGE_YAML_TMPL, self.task_config)
         FileHandler(soca_fix_stage_list).sync()
-        ensbkgconf = AttrDict()
-        keys = ['previous_cycle', 'current_cycle', 'DATA', 'NMEM_ENS',
-                'PARMgfs', 'ROTDIR', 'COM_OCEAN_HISTORY_TMPL', 'COM_ICE_HISTORY_TMPL']
-        for key in keys:
-            ensbkgconf[key] = self.task_config[key]
-        ensbkgconf.RUN = 'enkfgdas'
-        soca_ens_bkg_stage_list = parse_j2yaml(self.task_config.SOCA_ENS_BKG_STAGE_YAML_TMPL, ensbkgconf)
-        FileHandler(soca_ens_bkg_stage_list).sync()
-        letkf_stage_list = parse_j2yaml(self.task_config.MARINE_LETKF_STAGE_YAML_TMPL, self.task_config)
-        FileHandler(letkf_stage_list).sync()
 
+        stageconf = AttrDict()
+        keys = ['current_cycle',
+                'previous_cycle',
+                'COM_ICE_LETKF_TMPL',
+                'COM_OCEAN_LETKF_TMPL',
+                'COM_ICE_HISTORY_TMPL',
+                'COM_OCEAN_HISTORY_TMPL',
+                'COMOUT_ICE_LETKF',
+                'COMOUT_OCEAN_LETKF',
+                'DATA',
+                'NMEM_ENS',
+                'PARMgfs',
+                'ROTDIR',
+                'WINDOW_BEGIN',
+                'WINDOW_MIDDLE']
+        for key in keys:
+            stageconf[key] = self.task_config[key]
+        stageconf.RUN = 'enkfgdas'
+
+        # stage ensemble background files
+        soca_ens_bkg_stage_list = parse_j2yaml(self.task_config.SOCA_ENS_BKG_STAGE_YAML_TMPL, stageconf)
+        FileHandler(soca_ens_bkg_stage_list).sync()
+
+        # stage letkf-specific files
+        letkf_stage_list = parse_j2yaml(self.task_config.MARINE_LETKF_STAGE_YAML_TMPL, stageconf)
+        FileHandler(letkf_stage_list).sync()
 
         obs_list = parse_j2yaml(self.task_config.OBS_YAML, self.task_config)
 
@@ -88,7 +104,6 @@ class MarineLETKF(Analysis):
         for ob in obs_list['observers']:
             obs_name = ob['obs space']['name'].lower()
             obs_filename = f"{self.task_config.RUN}.t{self.task_config.cyc}z.{obs_name}.{to_YMDH(self.task_config.current_cycle)}.nc4"
-            # obs_filename = f"{self.task_config.RUN}.t{self.task_config.cyc}z.{obs_name}.{to_YMDH(self.task_config.current_cycle)}.nc"
             obs_files.append((obs_filename, ob))
 
         obs_files_to_copy = []
@@ -107,12 +122,7 @@ class MarineLETKF(Analysis):
         FileHandler({'copy': obs_files_to_copy}).sync()
 
         # make the letkf.yaml
-        letkfconf = AttrDict()
-        keys = ['WINDOW_BEGIN', 'WINDOW_MIDDLE', 'RUN', 'NMEM_ENS', 'OPREFIX', 'previous_cycle']
-        for key in keys:
-            letkfconf[key] = self.task_config[key]
-        letkfconf.RUN = 'enkfgdas'
-        letkf_yaml = parse_j2yaml(self.task_config.MARINE_LETKF_YAML_TMPL, letkfconf)
+        letkf_yaml = parse_j2yaml(self.task_config.MARINE_LETKF_YAML_TMPL, stageconf)
         letkf_yaml.observations.observers = obs_to_use
         letkf_yaml.save(self.task_config.letkf_yaml_file)
 
@@ -124,6 +134,7 @@ class MarineLETKF(Analysis):
             nml['ocean_solo_nml']['date_init'] = ymdhms
             nml['fms_nml']['domains_stack_size'] = int(domain_stack_size)
             nml.write(self.task_config.mom_input_nml, force=True)  # force to overwrite if necessary
+
 
     @logit(logger)
     def run(self):
@@ -177,3 +188,13 @@ class MarineLETKF(Analysis):
         """
 
         logger.info("finalize")
+
+        letkfsaveconf = AttrDict()
+        keys = ['current_cycle', 'DATA', 'NMEM_ENS', 'WINDOW_BEGIN',
+                'PARMgfs', 'ROTDIR', 'COM_OCEAN_LETKF_TMPL', 'COM_ICE_LETKF_TMPL']
+        for key in keys:
+            letkfsaveconf[key] = self.task_config[key]
+        letkfsaveconf.RUN = 'enkfgdas'
+        letkf_save_list = parse_j2yaml(self.task_config.MARINE_LETKF_SAVE_YAML_TMPL, letkfsaveconf)
+        print('letkf_save_list:', letkf_save_list)
+        FileHandler(letkf_save_list).sync()
