@@ -66,8 +66,7 @@ class MarineLETKF(Analysis):
 
         logger.info("initialize")
 
-        # stage fix files
-        soca_fix_stage_list = parse_j2yaml(self.task_config.SOCA_FIX_STAGE_YAML_TMPL, self.task_config)
+        # make directories and stage ensemble background files
         FileHandler(soca_fix_stage_list).sync()
 
         stageconf = AttrDict()
