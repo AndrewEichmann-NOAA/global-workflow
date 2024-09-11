@@ -67,6 +67,7 @@ class MarineLETKF(Analysis):
         logger.info("initialize")
 
         # make directories and stage ensemble background files
+        soca_fix_stage_list = parse_j2yaml(self.task_config.SOCA_FIX_YAML_TMPL, self.task_config)
         FileHandler(soca_fix_stage_list).sync()
 
         stageconf = AttrDict()
@@ -195,5 +196,4 @@ class MarineLETKF(Analysis):
             letkfsaveconf[key] = self.task_config[key]
         letkfsaveconf.RUN = 'enkfgdas'
         letkf_save_list = parse_j2yaml(self.task_config.MARINE_LETKF_SAVE_YAML_TMPL, letkfsaveconf)
-        print('letkf_save_list:', letkf_save_list)
         FileHandler(letkf_save_list).sync()
