@@ -692,6 +692,30 @@ class GFSTasks(Tasks):
 
         return task
 
+    def marineanlecen(self):
+
+        deps = []
+        dep_dict = {'type': 'task', 'name': f'{self.run}marineanlletkf'}
+        deps.append(rocoto.add_dependency(dep_dict))
+        dependencies = rocoto.create_dependency(dep=deps)
+
+        resources = self.get_resource('marineanlecen')
+        task_name = f'{self.run}marineanlecen'
+        task_dict = {'task_name': task_name,
+                     'resources': resources,
+                     'dependency': dependencies,
+                     'envars': self.envars,
+                     'cycledef': self.run.replace('enkf', ''),
+                     'command': f'{self.HOMEgfs}/jobs/rocoto/marineanlecen.sh',
+                     'job_name': f'{self.pslot}_{task_name}_@H',
+                     'log': f'{self.rotdir}/logs/@Y@m@d@H/{task_name}.log',
+                     'maxtries': '&MAXTRIES;'
+                     }
+
+        task = rocoto.create_task(task_dict)
+
+        return task
+
     def marinebmat(self):
 
         ocean_hist_path = self._template_to_rocoto_cycstring(self._base["COM_OCEAN_HISTORY_TMPL"], {'RUN': 'gdas'})
@@ -771,35 +795,11 @@ class GFSTasks(Tasks):
 
         return task
 
-    def ocnanalecen(self):
-
-        deps = []
-        dep_dict = {'type': 'task', 'name': f'{self.run}ocnanalrun'}
-        deps.append(rocoto.add_dependency(dep_dict))
-        dependencies = rocoto.create_dependency(dep=deps)
-
-        resources = self.get_resource('ocnanalecen')
-        task_name = f'{self.run}ocnanalecen'
-        task_dict = {'task_name': task_name,
-                     'resources': resources,
-                     'dependency': dependencies,
-                     'envars': self.envars,
-                     'cycledef': self.run.replace('enkf', ''),
-                     'command': f'{self.HOMEgfs}/jobs/rocoto/ocnanalecen.sh',
-                     'job_name': f'{self.pslot}_{task_name}_@H',
-                     'log': f'{self.rotdir}/logs/@Y@m@d@H/{task_name}.log',
-                     'maxtries': '&MAXTRIES;'
-                     }
-
-        task = rocoto.create_task(task_dict)
-
-        return task
-
     def ocnanalchkpt(self):
 
         deps = []
         if self.app_config.do_hybvar:
-            dep_dict = {'type': 'task', 'name': f'{self.run}ocnanalecen'}
+            dep_dict = {'type': 'task', 'name': f'{self.run}marineanlecen'}
         else:
             dep_dict = {'type': 'task', 'name': f'{self.run}ocnanalrun'}
         deps.append(rocoto.add_dependency(dep_dict))
