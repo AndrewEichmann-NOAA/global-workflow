@@ -3,6 +3,9 @@ defaults:
 base:
   DO_JEDIOCNVAR: "YES"
   DO_METP: "NO"
+  DO_JEDIATMVAR: "YES"
+  DOIAU: "NO"
+  IODADIR: "/scratch3/NCEPDEV/da/common_obsForge"
 
 marineanl:
   SOCA_NINNER: 1

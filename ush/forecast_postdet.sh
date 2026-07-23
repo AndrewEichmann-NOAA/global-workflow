@@ -185,13 +185,15 @@ EOF
                 # create an array of inc_files for each IAU hour
                 IFS=',' read -ra iaufhrs <<< "${IAUFHRS}"
                 inc_files=()
-                delimiter=""
+#                delimiter=""
+                delimiter=" "
                 IAU_INC_FILES=""
                 for iaufhr in "${iaufhrs[@]}"; do
                     if [[ "${DO_JEDIATMVAR:-NO}" == "YES" ]]; then
                         for tile in {1..6}; do
                             inc_file="jedi_increment.atm.i$(printf %03i "${iaufhr}").tile${tile}.nc"
                             inc_files+=("${inc_file}")
+                            #inc_files=("jedi_increment.atm.i006.tile1.nc" "jedi_increment.atm.i006.tile2.nc" "jedi_increment.atm.i006.tile3.nc" "jedi_increment.atm.i006.tile4.nc" "jedi_increment.atm.i006.tile5.nc" "jedi_increment.atm.i006.tile6.nc")
                             IAU_INC_FILES="${IAU_INC_FILES}${delimiter}'${inc_file}'"
                         done
                     else
@@ -605,9 +607,11 @@ WW3_out() {
     if [[ "${RUN}" == "gdas" ]]; then
         local restart_date restart_file
         restart_date="${next_cycle}"
-        echo "Copying WW3 restarts for 'RUN=${RUN}' at ${restart_date}"
-        restart_file="${restart_date:0:8}.${restart_date:8:2}0000.restart.ww3.nc"
-        echo "cpfs ${DATArestart}/WW3_RESTART/${restart_file} ${COMOUT_WAVE_RESTART}/${restart_file}" >> "${cmdfile}"
+        if [[ "${restart_date}" != "${model_start_date_next_cycle}" ]]; then
+            echo "Copying WW3 restarts for 'RUN=${RUN}' at ${restart_date}"
+            restart_file="${restart_date:0:8}.${restart_date:8:2}0000.restart.ww3.nc"
+            echo "cpfs ${DATArestart}/WW3_RESTART/${restart_file} ${COMOUT_WAVE_RESTART}/${restart_file}" >> "${cmdfile}"
+        fi
     fi
 
     if [[ -s "${cmdfile}" ]]; then

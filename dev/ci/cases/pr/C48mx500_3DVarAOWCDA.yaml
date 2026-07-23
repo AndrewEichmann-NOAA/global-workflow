@@ -7,7 +7,8 @@ experiment:
   resdetocean: 5.0
   comroot: {{ 'RUNTESTS' | getenv }}/COMROOT
   expdir: {{ 'RUNTESTS' | getenv }}/EXPDIR
-  icsdir: {{ BASE_IC }}/C48mx500/20250808
+    #icsdir: {{ BASE_IC }}/C48mx500/20250808
+  icsdir: /scratch3/NCEPDEV/da/Andrew.Eichmann/ICSDIR/C48mx500/20250808
   idate: 2021032418
   edate: 2021032500
   nens: 0
